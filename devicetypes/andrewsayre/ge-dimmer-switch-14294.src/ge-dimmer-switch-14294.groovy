@@ -58,7 +58,11 @@ metadata {
 
 	preferences {
 		input "ledIndicator", "enum", title: "LED Indicator", description: "Turn LED indicator... ", required: false, options:["on": "When On", "off": "When Off", "never": "Never"], defaultValue: "off"
-        input "defaultFadeDuration", "number", title: "Default Fade Duration (seconds):", description: "Default duration when fading between levels (0-128 seconds)...", required: false, range: "0..128", defaultValue: 1
+        input "defaultFadeDuration", "number", title: "Default Fade Duration (seconds)", description: "Default duration when fading between levels (0-128 seconds)...", required: false, range: "0..128", defaultValue: 1
+        input "doubleTapUpSetEnabled", "bool", title: "Enable Double-Tap Up Level", description: "Set the light level when the top button is double-tapped", required: false, defaultValue: false
+        input "doubleTapUpLevel", "number", title: "Double-Tap Up Level (when enabled)", description: "The level to set the light to when the up button is double-tapped", required: false, range: "0..100", defaultValue: 100
+        input "doubleTapDownSetEnabled", "bool", title: "Enable Double-Tap Down Level", description: "Set the light level when the bottom button is double-tapped", required: false, defaultValue: false
+        input "doubleTapDownLevel", "number", title: "Double-Tap Down Level (when enabled)", description: "The level to set the light to when the down button is double-tapped", required: false, range: "0..100", defaultValue: 0
 	}
 
 	tiles(scale: 2) {
@@ -180,7 +184,14 @@ private dimmerEvents(physicalgraph.zwave.Command cmd) {
 
 def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd) {
 	def buttonNumber = (cmd.value == 255 ? 1 : 2)
-	createEvent(name: "button", value: "pressed_$buttonNumber", data: [buttonNumber: buttonNumber], descriptionText: "button $buttonNumber double-tapped on $device.displayName", isStateChange: true, type: "physical")
+    
+    if (buttonNumber == 1 && doubleTapUpSetEnabled) {
+    	sendHubCommand(setLevel(doubleTapUpLevel))
+    } else if (buttonNumber == 2 && doubleTapDownSetEnabled) {
+    	sendHubCommand(setLevel(doubleTapDownLevel))
+    } else {
+    	createEvent(name: "button", value: "pressed_$buttonNumber", data: [buttonNumber: buttonNumber], descriptionText: "button $buttonNumber double-tapped on $device.displayName", isStateChange: true, type: "physical")
+    }
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd) {
@@ -256,17 +267,13 @@ def setLevelV1(value) {
 }
 
 def setLevel(value, duration) {
-	if (duration <= 0) {
-    	setLevelV1(value)
-    } else {
-        log.debug "setLevel >> value: $value, duration: $duration"
-        def valueaux = value as Integer
-        def level = Math.max(Math.min(valueaux, 99), 0)
-        def dimmingDuration = duration < 128 ? duration : 128 + Math.round(duration / 60)
-        def getStatusDelay = duration < 128 ? (duration*1000)+2000 : (Math.round(duration / 60)*60*1000)+2000
-        delayBetween ([zwave.switchMultilevelV2.switchMultilevelSet(value: level, dimmingDuration: dimmingDuration).format(),
-                       zwave.switchMultilevelV2.switchMultilevelGet().format()], getStatusDelay)
-	}
+    log.debug "setLevel >> value: $value, duration: $duration"
+    def valueaux = value as Integer
+    def level = Math.max(Math.min(valueaux, 99), 0)
+    def dimmingDuration = duration < 128 ? duration : 128 + Math.round(duration / 60)
+    def getStatusDelay = duration < 128 ? (duration*1000)+2000 : (Math.round(duration / 60)*60*1000)+2000
+    delayBetween ([zwave.switchMultilevelV2.switchMultilevelSet(value: level, dimmingDuration: dimmingDuration).format(),
+                   zwave.switchMultilevelV2.switchMultilevelGet().format()], getStatusDelay)
 }
 
 /**
