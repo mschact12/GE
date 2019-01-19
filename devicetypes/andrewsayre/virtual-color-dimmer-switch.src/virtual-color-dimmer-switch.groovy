@@ -79,19 +79,17 @@ def setSaturation(value) {
 
 def setColor(value) {
 	log.debug "Executing 'setColor': ${value}"
-    def result = []
 	if (value.hex) {
         def hsv = colorUtil.hexToHsv(value.hex)
-        result << sendEvent(name: "color", value: value.hex, isStateChange: true)
-        result << sendEvent(name: "hue", value: hsv[0], isStateChange: true)
-        result << sendEvent(name: "saturation", value: hsv[1], isStateChange: true)
+        sendEvent(name: "color", value: value.hex, isStateChange: true)
+        sendEvent(name: "hue", value: hsv[0], isStateChange: true)
+        sendEvent(name: "saturation", value: hsv[1], isStateChange: true)
 	} else {
     	def color = colorUtil.hsvToHex(Math.round(value.hue) as int, Math.round(value.saturation) as int)
-        result << sendEvent(name: "color", value: color, isStateChange: true)
-        result << sendEvent(name: "hue", value: value.hue, isStateChange: true)
-        result << sendEvent(name: "saturation", value: value.saturation, isStateChange: true)
+        sendEvent(name: "color", value: color, isStateChange: true)
+        sendEvent(name: "hue", value: value.hue, isStateChange: true)
+        sendEvent(name: "saturation", value: value.saturation, isStateChange: true)
 	}
-    result
 }
 
 def setColorTemperature(value) {
