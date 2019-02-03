@@ -18,8 +18,8 @@
  *   Button Mappings:
  *
  *   ACTION          BUTTON#    BUTTON ACTION
- *   Double-Tap Up     1        pressed
- *   Double-Tap Down   2        pressed
+ *   Double-Tap Up     1        pushed
+ *   Double-Tap Down   2        pushed
  *
  */
 metadata {
@@ -101,11 +101,27 @@ metadata {
 def installed() {
 	// Device-Watch simply pings if no device events received for 32min(checkInterval)
 	sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
-
 	response(refresh())
 }
 
+def createChildButtons() {
+    if (childDevices.size() > 0) {
+        childDevices.each {
+                try{
+                    deleteChildDevice(it.deviceNetworkId)
+                }
+                catch (e) {
+                    log.debug "Error deleting ${it.deviceNetworkId}: ${e}"
+                }
+            }
+    }
+    addChildDevice("Child Button", "${device.deviceNetworkId}.1", device.hub.id, [isComponent: true, completedSetup: true, label: "${device.label} (Top Button)", componentName: "topButton", componentLabel: "Top Button"])
+    addChildDevice("Child Button", "${device.deviceNetworkId}.2", device.hub.id, [isComponent: true, completedSetup: true, label: "${device.label} (Bottom Button)", componentName: "bottomButton", componentLabel: "Bottom Button"])
+}
+
 def updated(){
+	createChildButtons()
+    
 	// Device-Watch simply pings if no device events received for 32min(checkInterval)
 	sendEvent(name: "checkInterval", value: 2 * 15 * 60 + 2 * 60, displayed: false, data: [protocol: "zwave", hubHardwareId: device.hub.hardwareID])
     
@@ -190,6 +206,7 @@ def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd) {
     } else if (buttonNumber == 2 && doubleTapDownSetEnabled) {
     	sendHubCommand(setLevel(doubleTapDownLevel))
     } else {
+    	childDevices[buttonNumber - 1].raiseButtonPushed()
     	createEvent(name: "button", value: "pushed", data: [buttonNumber: buttonNumber], descriptionText: "button $buttonNumber double-tapped on $device.displayName", isStateChange: true, type: "physical")
     }
 }
