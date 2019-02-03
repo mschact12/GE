@@ -18,8 +18,8 @@
  *   Button Mappings:
  *
  *   ACTION          BUTTON#    BUTTON ACTION
- *   Double-Tap Up     1        pressed_1
- *   Double-Tap Down   2        pressed_2
+ *   Double-Tap Up     1        pressed
+ *   Double-Tap Down   2        pressed
  *
  */
 metadata {
@@ -190,7 +190,7 @@ def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd) {
     } else if (buttonNumber == 2 && doubleTapDownSetEnabled) {
     	sendHubCommand(setLevel(doubleTapDownLevel))
     } else {
-    	createEvent(name: "button", value: "pressed_$buttonNumber", data: [buttonNumber: buttonNumber], descriptionText: "button $buttonNumber double-tapped on $device.displayName", isStateChange: true, type: "physical")
+    	createEvent(name: "button", value: "pushed", data: [buttonNumber: buttonNumber], descriptionText: "button $buttonNumber double-tapped on $device.displayName", isStateChange: true, type: "physical")
     }
 }
 
