@@ -107,6 +107,10 @@ def off() {
     turnOff()
 }
 
+def setLevel(value, duration) {
+	setLevel(value)
+}
+
 def setLevel(value) {
     log.trace "Executing setLevel $value"
     Map levelEventMap = buildSetLevelEvent(value)
