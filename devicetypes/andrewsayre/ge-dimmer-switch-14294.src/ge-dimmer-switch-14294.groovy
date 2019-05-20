@@ -191,7 +191,7 @@ def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd) {
     } else if (buttonNumber == 2 && doubleTapDownSetEnabled) {
     	sendHubCommand(setLevel(doubleTapDownLevel))
     } else {
-    	value = (buttonNumber == 1 ? "up_2x" : "down_2x")
+    	def value = (buttonNumber == 1 ? "up_2x" : "down_2x")
     	createEvent(name: "button", value: value, descriptionText: "button $value double-tapped on $device.displayName", isStateChange: true, type: "physical")
     }
 }
